@@ -31,7 +31,7 @@ class Event(models.Model):
     DEFAULT_GROUP_ID = 0
 
     id = models.AutoField(primary_key=True)
-    date_time_created = models.DateTimeField(auto_now=False, auto_now_add=False)
+    date_time_created = models.DateTimeField(auto_now=True, auto_now_add=True)
     name = models.CharField(max_length=100)
     event_time = models.DateTimeField(auto_now=False, auto_now_add=False)
     signup_expiry_time = models.DateTimeField(auto_now=False, auto_now_add=False)

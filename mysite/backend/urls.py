@@ -13,5 +13,7 @@ urlpatterns = [
     url(r"^removefromgroup/", views.removefromgroup, name="removefromgroup"),
     url(r"^admingroups/", views.admingroups, name="admingroups"),
     url(r"^adminmakenewevent/", views.adminmakenewevent, name="adminmakenewevent"),
+    url(r"^whichuser/", views.whichuser, name="whichuser"),
+    url(r"^groupmembers/", views.groupmembers, name="groupmembers"),
 ]
 

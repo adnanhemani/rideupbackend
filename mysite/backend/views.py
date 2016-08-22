@@ -16,7 +16,7 @@ def login(request):
         retVal = {"logged_in": False, "reason": "User not found"}
         return JsonResponse(retVal)
     if user[0].password == pw:
-        retVal = {"logged_in": True}
+        retVal = {"logged_in": True, "user": user[0].id}
         return JsonResponse(retVal)
     else:
         retVal = {"logged_in": False, "reason": "User and Password do not match."}
@@ -25,19 +25,19 @@ def login(request):
 
 @csrf_exempt
 def register(request):
-    try:
-        group = request.GET["g"]
-        if (User.objects.filter(email_address=request.GET["email"])):
-            return JsonResponse({"success": False, "reason": "A user already exists with this username"})
-        new_user = User(first_name=request.GET["fname"], last_name=request.GET["lname"], phone_number=request.GET["phone_number"], 
-            email_address=request.GET["email"], password=request.GET["pw"], is_driver=request.GET["driver"], has_own_car=request.GET["own_car"])
-        new_user.save()
-        new_user.groups.add(group)
-        new_user.save()
-        retVal={"success": True}
-        return JsonResponse(retVal)
-    except:
-        return JsonResponse({"success": False, "reason": "whelp"})
+    #try:
+    group = request.GET["g"]
+    if (User.objects.filter(email_address=request.GET["email"])):
+        return JsonResponse({"success": False, "reason": "A user already exists with this username"})
+    new_user = User(first_name=request.GET["fname"], last_name=request.GET["lname"], phone_number=request.GET["phone_number"], 
+        email_address=request.GET["email"], password=request.GET["pw"], is_driver=request.GET["driver"], has_own_car=request.GET["own_car"])
+    new_user.save()
+    new_user.groups.add(group)
+    new_user.save()
+    retVal={"success": True}
+    return JsonResponse(retVal)
+    # except:
+    #     return JsonResponse({"success": False, "reason": "whelp"})
 
 @csrf_exempt
 def groups(request):
@@ -54,8 +54,8 @@ def groups(request):
 @csrf_exempt
 def ridesessions(request):
     try:    
-        email = request.GET["email"]
-        user = User.objects.filter(email_address=email)[0]
+        user_id = request.GET["user"]
+        user = User.objects.filter(id=user_id)[0]
         #print(user.groups.all())
         events = []
         for group in user.groups.all():
@@ -65,7 +65,7 @@ def ridesessions(request):
         retVal = {"error": False, "groups": event_json}
         return JsonResponse(retVal) 
     except:
-        return JsonResponse({"error": True, "reason": "no user found with that email"})
+        return JsonResponse({"error": True, "reason": "no user found"})
 
 @csrf_exempt
 def groupsinfo(request):
@@ -96,10 +96,12 @@ def requestride(request):
         return JsonResponse({"error": True, "reason": "User not found. Oops?!?!"})
 
     retVal = {}
+    event_id=request.GET["event_id"]
+    event_obj = Event.objects.filter(id=event_id)[0]
     if user.is_driver:
-        new_rr = EventRequests(user=user, driver_leaving_time=request.GET["driver_leaving_time"], driver_car_spaces=request.GET["driver_spaces"])
+        new_rr = EventRequests(user=user, driver_leaving_time=request.GET["driver_leaving_time"], driver_car_spaces=request.GET["driver_spaces"], event=event_obj)
     else:
-        new_rr = EventRequests(user=user, driver_leaving_time=None, driver_car_spaces=None)
+        new_rr = EventRequests(user=user, driver_leaving_time=None, driver_car_spaces=None, event=event_obj)
 
     try:
         new_rr.save()
@@ -171,7 +173,7 @@ def admingroups(request):
 @csrf_exempt
 def adminmakenewevent(request):
     group = Group.objects.filter(id=request.GET["group"])[0]
-    new_event = Event(date_time_created=request.GET["dt_created"], name=request.GET["name"], event_time=request.GET["event_time"], 
+    new_event = Event(name=request.GET["name"], event_time=request.GET["event_time"], 
         signup_expiry_time=request.GET["signup_expiry"], group=group, active=True)
 
     retVal = {}
@@ -183,6 +185,23 @@ def adminmakenewevent(request):
         return JsonResponse(retVal)
     retVal["error"] = False
     return JsonResponse(retVal)
+
+@csrf_exempt
+def whichuser(request):
+    user_id = request.GET["user_id"]
+    user = User.objects.filter(id=user_id)[0]
+    user_ser = serializers.serialize("json", [user])
+    return JsonResponse({"error": False, "user": user_ser})
+
+@csrf_exempt
+def groupmembers(request):
+    group_id = request.GET["group"]
+    group_members = []
+    for user in User.objects.all():
+        if user.groups.all().filter(id=group_id):
+            group_members.append(user)
+    group_members_ser = serializers.serialize("json", group_members)
+    return JsonResponse({"error": False, "members": group_members_ser})
 
 
 

@@ -130,3 +130,5 @@ CRON_CLASSES = [
 ]
 
 CRON_POLLING_FREQUENCY = 60
+
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
